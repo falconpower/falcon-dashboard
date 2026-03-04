@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { initializeApp } from 'firebase/app'
 import { getFirestore, collection, getDocs } from 'firebase/firestore'
-import { getAnalytics } from 'firebase/analytics'
 
 interface OnboardingEvent {
   form_type?: string
@@ -52,7 +51,6 @@ function FalconDashboard() {
 };
     const app = initializeApp(firebaseConfig)
     const db = getFirestore(app)
-    const analytics = getAnalytics(app);
 
    // Fetch data from Firestore
     const fetchData = async () => {
