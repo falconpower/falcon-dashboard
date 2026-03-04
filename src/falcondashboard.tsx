@@ -1,0 +1,116 @@
+import { useState, useEffect } from 'react'
+import { initializeApp } from 'firebase/app'
+import { getFirestore, collection, getDocs } from 'firebase/firestore'
+import { getAnalytics } from 'firebase/analytics'
+
+interface OnboardingEvent {
+  form_type?: string
+  form_export?: string
+  timestamp?: {
+    seconds: number
+    nanoseconds: number
+  }
+}
+
+interface Stats {
+  form_type: Record<string, number>
+  form_export: Record<string, number>
+}
+
+function calculateStats(events: OnboardingEvent[]): Stats {
+  const stats: Stats = {
+    form_type: {},
+    form_export: {},
+  }
+
+  events.forEach((event) => {
+    const formType = event.form_type ?? 'Unknown'
+    const formExport = event.form_export ?? 'Unknown'
+
+    stats.form_type[formType] = (stats.form_type[formType] || 0) + 1
+    stats.form_export[formExport] = (stats.form_export[formExport] || 0) + 1
+  })
+
+  return stats
+}
+
+function FalconDashboard() {
+  const [data, setData] = useState<OnboardingEvent[]>([])
+  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState<Stats | null>(null)
+
+  useEffect(() => {
+    //Initialize Firebase (replace with your config)
+    const firebaseConfig = {
+  apiKey: "AIzaSyB1ZQCKRZNllIy1fmB2xMBpM0IGs-aLWnQ",
+  authDomain: "falcon-forms-840f3.firebaseapp.com",
+  projectId: "falcon-forms-840f3",
+  storageBucket: "falcon-forms-840f3.firebasestorage.app",
+  messagingSenderId: "628416702669",
+  appId: "1:628416702669:web:59cb90f337caea5aa4a184",
+  measurementId: "G-94YDE6XH2W"
+};
+    const app = initializeApp(firebaseConfig)
+    const db = getFirestore(app)
+    const analytics = getAnalytics(app);
+
+   // Fetch data from Firestore
+    const fetchData = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'onboardingEvents'))
+        const documents = querySnapshot.docs.map(doc => doc.data() as OnboardingEvent)
+        setData(documents)
+        setStats(calculateStats(documents))
+      } catch (error) {
+        console.error('Error fetching data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  return (
+    <div className="falcon-dashboard">
+      <h1>Falcon Dashboard</h1>
+      {loading && <p>Loading...</p>}
+      {!loading && data.length === 0 && <p>No data available</p>}
+      {!loading && data.length > 0 && (
+        <div>
+          <h2>Statistics</h2>
+          <div style={{ display: 'flex', gap: '2rem', marginBottom: '2rem' }}>
+            <div>
+              <h3>Form Type Counts</h3>
+              <ul>
+                {Object.entries(stats?.form_type || {})
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([type, count]) => (
+                    <li key={type}>
+                      {type === '' ? '(empty)' : type}: <strong>{count}</strong>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+            <div>
+              <h3>Form Export Counts</h3>
+              <ul>
+                {Object.entries(stats?.form_export || {})
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([exp, count]) => (
+                    <li key={exp}>
+                      {exp === '' ? '(empty)' : exp}: <strong>{count}</strong>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          </div>
+          <h2>Raw Data ({data.length} records)</h2>
+          <pre>{JSON.stringify(data, null, 2)}</pre>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default FalconDashboard
