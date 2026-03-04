@@ -2,7 +2,7 @@
   "name": "falcon-dashboard",
   "private": true,
   "version": "0.0.0",
-  "homepage": "https://falconpower.github.io/falcon-dashbboard",
+  "homepage": "https://falconpower.github.io/falcon-dashboard",
   "type": "module",
   "scripts": {
     "dev": "vite",
