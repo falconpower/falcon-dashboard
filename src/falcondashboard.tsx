@@ -85,7 +85,7 @@ function FalconDashboard() {
 
   return (
     <div className="falcon-dashboard">
-      <h1>Falcon Dashboard</h1>
+      <h1>Falcon Dashboard: {onboardingTotal}</h1>
       {loading && <p>Loading...</p>}
       {!loading && onboardingData.length === 0 && paywallData.length === 0 && <p>No data available</p>}
 
