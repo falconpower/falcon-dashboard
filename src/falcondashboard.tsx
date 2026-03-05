@@ -35,9 +35,11 @@ function calculateStats(events: OnboardingEvent[]): Stats {
 
 function FalconDashboard() {
   // Dashboard component to display Firestore statistics
-  const [data, setData] = useState<OnboardingEvent[]>([])
+  const [onboardingData, setOnboardingData] = useState<OnboardingEvent[]>([])
+  const [paywallData, setPaywallData] = useState<OnboardingEvent[]>([])
   const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState<Stats | null>(null)
+  const [onboardingStats, setOnboardingStats] = useState<Stats | null>(null)
+  const [paywallStats, setPaywallStats] = useState<Stats | null>(null)
 
   useEffect(() => {
     //Initialize Firebase (replace with your config)
@@ -56,10 +58,17 @@ function FalconDashboard() {
    // Fetch data from Firestore
     const fetchData = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, 'onboardingEvents'))
-        const documents = querySnapshot.docs.map(doc => doc.data() as OnboardingEvent)
-        setData(documents)
-        setStats(calculateStats(documents))
+        // Fetch from onboardingEvents
+        const onboardingSnapshot = await getDocs(collection(db, 'onboardingEvents'))
+        const onboardingDocuments = onboardingSnapshot.docs.map(doc => doc.data() as OnboardingEvent)
+        setOnboardingData(onboardingDocuments)
+        setOnboardingStats(calculateStats(onboardingDocuments))
+
+        // Fetch from paywallEvents
+        const paywallSnapshot = await getDocs(collection(db, 'paywallEvents'))
+        const paywallDocuments = paywallSnapshot.docs.map(doc => doc.data() as OnboardingEvent)
+        setPaywallData(paywallDocuments)
+        setPaywallStats(calculateStats(paywallDocuments))
       } catch (error) {
         console.error('Error fetching data:', error)
       } finally {
@@ -74,16 +83,17 @@ function FalconDashboard() {
     <div className="falcon-dashboard">
       <h1>Falcon Dashboard</h1>
       {loading && <p>Loading...</p>}
-      {!loading && data.length === 0 && <p>No data available</p>}
-      {!loading && data.length > 0 && (
+      {!loading && onboardingData.length === 0 && paywallData.length === 0 && <p>No data available</p>}
+      
+      {!loading && onboardingData.length > 0 && (
         <div>
-          <h2>Statistics</h2>
+          <h2>Onboarding Events Statistics</h2>
           <div style={{ display: 'flex', gap: '2rem', marginBottom: '2rem' }}>
             <div>
               <h3>Form Type Counts</h3>
               <ul>
                 {(() => {
-                  const entries = Object.entries(stats?.form_type || {}).sort((a, b) => b[1] - a[1])
+                  const entries = Object.entries(onboardingStats?.form_type || {}).sort((a, b) => b[1] - a[1])
                   const total = entries.reduce((sum, [, count]) => sum + count, 0)
                   return entries.map(([type, count]) => {
                     const percentage = ((count / total) * 100).toFixed(2)
@@ -100,7 +110,7 @@ function FalconDashboard() {
               <h3>Form Export Counts</h3>
               <ul>
                 {(() => {
-                  const entries = Object.entries(stats?.form_export || {}).sort((a, b) => b[1] - a[1])
+                  const entries = Object.entries(onboardingStats?.form_export || {}).sort((a, b) => b[1] - a[1])
                   const total = entries.reduce((sum, [, count]) => sum + count, 0)
                   return entries.map(([exp, count]) => {
                     const percentage = ((count / total) * 100).toFixed(2)
@@ -114,8 +124,52 @@ function FalconDashboard() {
               </ul>
             </div>
           </div>
-          <h2>Raw Data ({data.length} records)</h2>
-          <pre>{JSON.stringify(data, null, 2)}</pre>
+          {/* <h2>Onboarding Raw Data ({onboardingData.length} records)</h2>
+          <pre>{JSON.stringify(onboardingData, null, 2)}</pre> */}
+        </div>
+      )}
+
+      {!loading && paywallData.length > 0 && (
+        <div>
+          <h2>Paywall Events Statistics</h2>
+          <div style={{ display: 'flex', gap: '2rem', marginBottom: '2rem' }}>
+            <div>
+              <h3>Form Type Counts</h3>
+              <ul>
+                {(() => {
+                  const entries = Object.entries(paywallStats?.form_type || {}).sort((a, b) => b[1] - a[1])
+                  const total = entries.reduce((sum, [, count]) => sum + count, 0)
+                  return entries.map(([type, count]) => {
+                    const percentage = ((count / total) * 100).toFixed(2)
+                    return (
+                      <li key={type}>
+                        {type === '' ? '(empty)' : type}: <strong>{count}</strong> ({percentage}%)
+                      </li>
+                    )
+                  })
+                })()}
+              </ul>
+            </div>
+            <div>
+              <h3>Form Export Counts</h3>
+              <ul>
+                {(() => {
+                  const entries = Object.entries(paywallStats?.form_export || {}).sort((a, b) => b[1] - a[1])
+                  const total = entries.reduce((sum, [, count]) => sum + count, 0)
+                  return entries.map(([exp, count]) => {
+                    const percentage = ((count / total) * 100).toFixed(2)
+                    return (
+                      <li key={exp}>
+                        {exp === '' ? '(empty)' : exp}: <strong>{count}</strong> ({percentage}%)
+                      </li>
+                    )
+                  })
+                })()}
+              </ul>
+            </div>
+          </div>
+          <h2>Paywall Raw Data ({paywallData.length} records)</h2>
+          <pre>{JSON.stringify(paywallData, null, 2)}</pre>
         </div>
       )}
     </div>
