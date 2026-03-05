@@ -34,6 +34,7 @@ function calculateStats(events: OnboardingEvent[]): Stats {
 }
 
 function FalconDashboard() {
+  // Dashboard component to display Firestore statistics
   const [data, setData] = useState<OnboardingEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState<Stats | null>(null)
