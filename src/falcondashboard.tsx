@@ -81,25 +81,35 @@ function FalconDashboard() {
             <div>
               <h3>Form Type Counts</h3>
               <ul>
-                {Object.entries(stats?.form_type || {})
-                  .sort((a, b) => b[1] - a[1])
-                  .map(([type, count]) => (
-                    <li key={type}>
-                      {type === '' ? '(empty)' : type}: <strong>{count}</strong>
-                    </li>
-                  ))}
+                {(() => {
+                  const entries = Object.entries(stats?.form_type || {}).sort((a, b) => b[1] - a[1])
+                  const total = entries.reduce((sum, [, count]) => sum + count, 0)
+                  return entries.map(([type, count]) => {
+                    const percentage = ((count / total) * 100).toFixed(2)
+                    return (
+                      <li key={type}>
+                        {type === '' ? '(empty)' : type}: <strong>{count}</strong> ({percentage}%)
+                      </li>
+                    )
+                  })
+                })()}
               </ul>
             </div>
             <div>
               <h3>Form Export Counts</h3>
               <ul>
-                {Object.entries(stats?.form_export || {})
-                  .sort((a, b) => b[1] - a[1])
-                  .map(([exp, count]) => (
-                    <li key={exp}>
-                      {exp === '' ? '(empty)' : exp}: <strong>{count}</strong>
-                    </li>
-                  ))}
+                {(() => {
+                  const entries = Object.entries(stats?.form_export || {}).sort((a, b) => b[1] - a[1])
+                  const total = entries.reduce((sum, [, count]) => sum + count, 0)
+                  return entries.map(([exp, count]) => {
+                    const percentage = ((count / total) * 100).toFixed(2)
+                    return (
+                      <li key={exp}>
+                        {exp === '' ? '(empty)' : exp}: <strong>{count}</strong> ({percentage}%)
+                      </li>
+                    )
+                  })
+                })()}
               </ul>
             </div>
           </div>
