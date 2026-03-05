@@ -44,18 +44,18 @@ function FalconDashboard() {
   useEffect(() => {
     //Initialize Firebase (replace with your config)
     const firebaseConfig = {
-  apiKey: "AIzaSyB1ZQCKRZNllIy1fmB2xMBpM0IGs-aLWnQ",
-  authDomain: "falcon-forms-840f3.firebaseapp.com",
-  projectId: "falcon-forms-840f3",
-  storageBucket: "falcon-forms-840f3.firebasestorage.app",
-  messagingSenderId: "628416702669",
-  appId: "1:628416702669:web:59cb90f337caea5aa4a184",
-  measurementId: "G-94YDE6XH2W"
-};
+      apiKey: "AIzaSyB1ZQCKRZNllIy1fmB2xMBpM0IGs-aLWnQ",
+      authDomain: "falcon-forms-840f3.firebaseapp.com",
+      projectId: "falcon-forms-840f3",
+      storageBucket: "falcon-forms-840f3.firebasestorage.app",
+      messagingSenderId: "628416702669",
+      appId: "1:628416702669:web:59cb90f337caea5aa4a184",
+      measurementId: "G-94YDE6XH2W"
+    };
     const app = initializeApp(firebaseConfig)
     const db = getFirestore(app)
 
-   // Fetch data from Firestore
+    // Fetch data from Firestore
     const fetchData = async () => {
       try {
         // Fetch from onboardingEvents
@@ -79,12 +79,16 @@ function FalconDashboard() {
     fetchData()
   }, [])
 
+  const onboardingTotal = onboardingData.length
+  const paywallTotal = paywallData.length
+  const overallConversion = onboardingTotal > 0 ? (paywallTotal / onboardingTotal) * 100 : 0
+
   return (
     <div className="falcon-dashboard">
       <h1>Falcon Dashboard</h1>
       {loading && <p>Loading...</p>}
       {!loading && onboardingData.length === 0 && paywallData.length === 0 && <p>No data available</p>}
-      
+
       {!loading && onboardingData.length > 0 && (
         <div>
           <h2>Onboarding Events Statistics</h2>
@@ -132,6 +136,9 @@ function FalconDashboard() {
       {!loading && paywallData.length > 0 && (
         <div>
           <h2>Paywall Events Statistics</h2>
+          <p>
+            Conversion from onboarding to paywall (overall): <strong>{overallConversion.toFixed(2)}%</strong> ({paywallTotal} / {onboardingTotal})
+          </p>
           <div style={{ display: 'flex', gap: '2rem', marginBottom: '2rem' }}>
             <div>
               <h3>Form Type Counts</h3>
@@ -169,6 +176,7 @@ function FalconDashboard() {
             </div>
           </div>
           <h2>Paywall Raw Data ({paywallData.length} records)</h2>
+          
           <pre>{JSON.stringify(paywallData, null, 2)}</pre>
         </div>
       )}
