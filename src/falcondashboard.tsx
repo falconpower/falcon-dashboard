@@ -37,9 +37,11 @@ function FalconDashboard() {
   // Dashboard component to display Firestore statistics
   const [onboardingData, setOnboardingData] = useState<OnboardingEvent[]>([])
   const [paywallData, setPaywallData] = useState<OnboardingEvent[]>([])
+  const [purchaseData, setPurchaseData] = useState<OnboardingEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [onboardingStats, setOnboardingStats] = useState<Stats | null>(null)
   const [paywallStats, setPaywallStats] = useState<Stats | null>(null)
+  const [purchaseStats, setPurchaseStats] = useState<Stats | null>(null)
 
   useEffect(() => {
     //Initialize Firebase (replace with your config)
@@ -69,6 +71,12 @@ function FalconDashboard() {
         const paywallDocuments = paywallSnapshot.docs.map(doc => doc.data() as OnboardingEvent)
         setPaywallData(paywallDocuments)
         setPaywallStats(calculateStats(paywallDocuments))
+
+         // Fetch from paywallEvents
+        const purchaseSnapshot = await getDocs(collection(db, 'purchaseEvents'))
+        const purchaseDocuments = purchaseSnapshot.docs.map(doc => doc.data() as OnboardingEvent)
+        setPurchaseData(purchaseDocuments)
+        setPurchaseStats(calculateStats(purchaseDocuments))
       } catch (error) {
         console.error('Error fetching data:', error)
       } finally {
@@ -81,7 +89,9 @@ function FalconDashboard() {
 
   const onboardingTotal = onboardingData.length
   const paywallTotal = paywallData.length
+  const purchaseTotal = purchaseData.length
   const overallConversion = onboardingTotal > 0 ? (paywallTotal / onboardingTotal) * 100 : 0
+  const overallPurchaseConversion = onboardingTotal > 0 ? (purchaseTotal / onboardingTotal) * 100 : 0
 
   return (
     <div className="falcon-dashboard">
@@ -175,9 +185,51 @@ function FalconDashboard() {
               </ul>
             </div>
           </div>
-          <h2>Paywall Raw Data ({paywallData.length} records)</h2>
-          
-          <pre>{JSON.stringify(paywallData, null, 2)}</pre>
+        </div>
+      )}
+
+      {!loading && purchaseData.length > 0 && (
+        <div>
+          <h2>Purchase Interest Statistics</h2>
+          <p>
+            Conversion from onboarding to purchase (overall): <strong>{overallPurchaseConversion.toFixed(2)}%</strong> ({purchaseTotal} / {onboardingTotal})
+          </p>
+          <div style={{ display: 'flex', gap: '2rem', marginBottom: '2rem' }}>
+            <div>
+              <h3>Form Type Counts</h3>
+              <ul>
+                {(() => {
+                  const entries = Object.entries(purchaseStats?.form_type || {}).sort((a, b) => b[1] - a[1])
+                  const total = entries.reduce((sum, [, count]) => sum + count, 0)
+                  return entries.map(([type, count]) => {
+                    const percentage = ((count / total) * 100).toFixed(2)
+                    return (
+                      <li key={type}>
+                        {type === '' ? '(empty)' : type}: <strong>{count}</strong> ({percentage}%)
+                      </li>
+                    )
+                  })
+                })()}
+              </ul>
+            </div>
+            <div>
+              <h3>Form Export Counts</h3>
+              <ul>
+                {(() => {
+                  const entries = Object.entries(purchaseStats?.form_export || {}).sort((a, b) => b[1] - a[1])
+                  const total = entries.reduce((sum, [, count]) => sum + count, 0)
+                  return entries.map(([exp, count]) => {
+                    const percentage = ((count / total) * 100).toFixed(2)
+                    return (
+                      <li key={exp}>
+                        {exp === '' ? '(empty)' : exp}: <strong>{count}</strong> ({percentage}%)
+                      </li>
+                    )
+                  })
+                })()}
+              </ul>
+            </div>
+          </div>
         </div>
       )}
     </div>
